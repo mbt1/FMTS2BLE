@@ -5,6 +5,11 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# Make sure we're up to date
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y bluez bluez-tools
+
 
 COPY DockerPostCreate.sh /
 RUN chmod +x /DockerPostCreate.sh

@@ -51,6 +51,15 @@
 		}
 	},
 
+	"runArgs": [
+        // "--cap-add=NET_ADMIN",
+        // "--cap-add=SYS_RAWIO",
+        // "--device=/dev/bus/usb/",
+        // "--device=/dev/rfkill",
+		"--volume=/var/run/dbus:/var/run/dbus",
+		"--privileged",
+		"--net=host"
+    ],
 	// Configure tool-specific properties.
 	// "customizations": {},
 
