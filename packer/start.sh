@@ -9,7 +9,7 @@ echo
 pushd "$(dirname "$BASH_SOURCE")"
 
 # Call Packer
-packer build -var "ssh_password=$ssh_password" debian.hcl
+packer build -var "ssh_password=$ssh_password" debian.pkr.hcl
 
 # Return to the previous directory
 popd
