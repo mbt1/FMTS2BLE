@@ -15,11 +15,11 @@ variable "ssh_password" {
 source "vmware-iso" "debian" {
   iso_url      = var.iso_url
   iso_checksum = "sha512:${var.iso_checksum}"
-  ssh_username = "packer"
+  ssh_username = "debian"
   ssh_password = var.ssh_password
   ssh_port     = 22
   ssh_wait_timeout = "10000s"
-  shutdown_command = "echo 'packer' | sudo -S shutdown -P now"
+  shutdown_command = "echo 'debian' | sudo -S shutdown -P now"
   vm_name     = "packer-debian"
   cpus        = 1
   memory      = 1024
