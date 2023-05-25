@@ -29,6 +29,7 @@ source "vmware-iso" "debian" {
   cd_files = ["./http/*"]
   cd_label = "seeddata"
   boot_wait = "10s"
+  boot_key_interval = "10ms"
   boot_command = [
     "<esc><wait>",
     "install <wait>",
