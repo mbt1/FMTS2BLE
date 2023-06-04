@@ -3,11 +3,12 @@
 # requirements:
 # - ovftool must be in path (VMWare product, often installed with VMWare)
 # - wget must be in path (brew install wget)
+# - mkpasswd must be in path (brew install whois)
 
 
 # Hardcoded URL
-iso_url="http://cdimage.debian.org/debian-cd/current/i386/iso-cd/debian-11.7.0-i386-netinst.iso"
-checksums_url="http://cdimage.debian.org/debian-cd/current/i386/iso-cd/SHA512SUMS"
+iso_url="http://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-11.7.0-amd64-netinst.iso"
+checksums_url="http://cdimage.debian.org/debian-cd/current/amd64/iso-cd/SHA512SUMS"
 
 # Download the checksum file
 SHA512SUMS=$(mktemp)
