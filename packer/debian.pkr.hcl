@@ -19,7 +19,7 @@ source "vmware-iso" "debian" {
   ssh_password = var.ssh_password
   ssh_port     = 22
   ssh_wait_timeout = "10000s"
-  shutdown_command = "echo 'debian' | sudo -S shutdown -P now"
+  shutdown_command = "echo var.ssh_password | sudo -S shutdown -P now"
   vm_name     = "packer-debian"
   cpus        = 1
   memory      = 1024
@@ -34,7 +34,7 @@ source "vmware-iso" "debian" {
     "<esc><wait>",
     "install <wait>",
     "auto=true priority=critical file=/mnt/cdrom2/preseed.cfg <wait>",
-    "<wait><enter><wait5>",
+    "<wait><enter><wait3>",
     "<leftAltOn><f2><leftAltOff>",
     "<wait><enter><wait>",
     "mkdir /mnt/cdrom2<enter><wait>",
