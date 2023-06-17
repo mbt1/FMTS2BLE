@@ -1,2 +1,3 @@
 packer/packer.log
 packer/output-debian
+packer/http/preseed.cfg
