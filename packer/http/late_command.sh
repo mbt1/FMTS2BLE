@@ -46,3 +46,7 @@ node -v
 npm -v
 npm install -g npm
 npm install -g express
+
+NODE_VERSION=$(node -v)
+ln -s /root/.nvm/versions/node/$NODE_VERSION/bin/node /usr/local/bin/node
+ln -s /root/.nvm/versions/node/$NODE_VERSION/bin/npm /usr/local/bin/npm
