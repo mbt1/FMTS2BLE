@@ -11,3 +11,4 @@ node -v
 npm -v
 npm install -g npm
 npm install -g express
+npm install
