@@ -33,8 +33,16 @@ apt install bluez -y
 systemctl --no-pager status bluetooth
 
 apt install -y curl
-LTS_VERSION=$(curl --silent https://nodejs.org/en/about/releases/ | grep LTS | head -1 | cut -d " " -f2)
-curl -sL "https://deb.nodesource.com/setup_${LTS_VERSION}.x" | sudo -E bash -
-apt install -y nodejs
+# LTS_VERSION=$(curl --silent https://nodejs.org/en/about/releases/ | grep LTS | head -1 | cut -d " " -f2)
+# curl -sL "https://deb.nodesource.com/setup_${LTS_VERSION}.x" | sudo -E bash -
+# apt install -y nodejs
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+command -v nvm
+nvm --version
+nvm install --lts
 node -v
-
+npm -v
+npm install -g npm
+npm install -g express
