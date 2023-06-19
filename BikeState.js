@@ -1,13 +1,12 @@
 
 const EventEmitter = require('events');
-var DEBUG = false;
 
 var minGear = 1;
 var maxGear = 10;
 
 class BikeState extends EventEmitter {
-
-	constructor() {
+	debug = false
+	constructor(debug = false) {
 		super();
 		console.log(`[BikeState starting]`);
 
@@ -109,7 +108,7 @@ class BikeState extends EventEmitter {
 		// store
 		simpower = simpower.toFixed(1);
 
-		if (DEBUG) {
+		if (this.debug) {
 			console.log('[BikeState.js] - SIM rpm: ', this.data.rpm);
 			console.log('[BikeState.js] - SIM pente: ', this.external.grade);
 			console.log('[BikeState.js] - SIM gear : ', this.gear);

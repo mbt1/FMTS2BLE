@@ -12,7 +12,7 @@ console.log = function () {
 	t.write(util.format.apply(this, arguments) + '\n');
 };*/
 
-var DEBUG = false;
+var DEBUG = true;
 var express = require('express');
 var kettlerUSB = require('./kettlerUSB');
 var KettlerBLE = require('./BLE/kettlerBLE');
@@ -68,7 +68,7 @@ button.on('clicked', function () {
 //var oled = new Oled();
 
 //--- Machine State
-var bikeState = new BikeState();
+var bikeState = new BikeState(DEBUG);
 // un peu de retour serveur
 bikeState.on('mode', (mode) => {
 	io.emit('mode', mode);
@@ -91,7 +91,7 @@ bikeState.on('simpower', (simpower) => {
 bikeState.setGear(4);
 
 //--- Serial port
-var kettlerUSB = new kettlerUSB();
+var kettlerUSB = new kettlerUSB(DEBUG);
 kettlerUSB.on('error', (string) => {
 	console.log('error : ' + string);
 	io.emit('error', string);
@@ -122,7 +122,7 @@ kettlerUSB.on('data', (data) => {
 kettlerUSB.open();
 
 //--- BLE server
-var kettlerBLE = new KettlerBLE(serverCallback);
+var kettlerBLE = new KettlerBLE(serverCallback, DEBUG);
 
 kettlerBLE.on('advertisingStart', (client) => {
 	//oled.displayBLE('Started');

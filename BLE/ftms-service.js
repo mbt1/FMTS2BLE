@@ -7,12 +7,11 @@ const StaticReadCharacteristic = require('./static-read-characteristic');
 const FitnessMachineStatusCharacteristic = require('./fitness-machine-status-characteristic');
 
 class FitnessMachineService extends Bleno.PrimaryService {
-
-	constructor(callback) {
-
-		let controlPoint = new FitnessControlPoint(callback);
-		let indoorBikeData = new IndoorBikeDataCharacteristic();
-		let fitnessMachineStatus = new FitnessMachineStatusCharacteristic()
+	debug = false
+	constructor(callback,debug = false) {
+		let controlPoint = new FitnessControlPoint(callback, debug);
+		let indoorBikeData = new IndoorBikeDataCharacteristic(debug);
+		let fitnessMachineStatus = new FitnessMachineStatusCharacteristic(debug)
 
 			super({
 				uuid: '1826',
@@ -24,8 +23,8 @@ class FitnessMachineService extends Bleno.PrimaryService {
 					new StaticReadCharacteristic('2AD8', 'SupportedPowerRange', [0x32, 0x00, 0x58, 0x02, 0x05, 0x00]), // SupportedPowerRange (50 - 600 with 5watts step)
 				]
 			});
-
-		this.indoorBikeData = indoorBikeData;
+			this.debug = debug
+			this.indoorBikeData = indoorBikeData;
 	}
 
 	/*

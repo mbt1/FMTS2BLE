@@ -1,8 +1,7 @@
 var $q = require('q');
 var EventEmitter = require('events').EventEmitter;
 var SerialPort = require('serialport');
-var DEBUG = true;
-var MOCKDEBUG = false;
+var MOCKDEBUG = true;
 
 const Readline = SerialPort.parsers.Readline;
 const EOL = '\r\n'; // CRLF
@@ -18,9 +17,11 @@ if (MOCKDEBUG) {
 }
 
 class kettlerUSB extends EventEmitter {
-	constructor() {
+	debug = false
+	constructor(debug = false) {
 		console.log('[KettlerUSB] constructor');
 		super();
+		this.debug = debug
 		this.msg = ["VE", "ID", "VE", "KI", "CA", "RS", "CM", "SP1"];
 		//start at -1
 		this.writePower = false;
@@ -28,7 +29,7 @@ class kettlerUSB extends EventEmitter {
 	};
 
 	directWrite(data) {
-		if (DEBUG)
+		if (this.debug)
 			console.log('[KettlerUSB] write : ' + data);
 		this.port.write(data + EOL);
 	};
@@ -41,7 +42,7 @@ class kettlerUSB extends EventEmitter {
 			return;
 		}
 
-		if (DEBUG) {
+		if (this.debug) {
 			if (MOCKDEBUG) {
 				if (data == 'ST' || data.startsWith('PW'))
 					data = '101\t85\t35\t002\t' + this.power + '\t300\t01:12\t' + this.power;
@@ -116,7 +117,7 @@ class kettlerUSB extends EventEmitter {
 				this.emit('key', key);
 			}
 		} else {
-			if (DEBUG)
+			if (this.debug)
 				console.log('[KettlerUSB] Unrecognized packet');
 		}
 	};

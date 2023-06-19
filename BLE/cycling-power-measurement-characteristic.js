@@ -1,13 +1,12 @@
 
 var Bleno = require('@abandonware/bleno');
-var DEBUG = false;
 
 // Spec
 //https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.cycling_power_measurement.xml
 
 class CyclingPowerMeasurementCharacteristic extends  Bleno.Characteristic {
- 
-  constructor() {
+  debug = false
+  constructor(debug = false) {
     super({
       uuid: '2A63',
       value: null,
@@ -29,17 +28,18 @@ class CyclingPowerMeasurementCharacteristic extends  Bleno.Characteristic {
         })
       ]
     });
+    this.debug = debug
     this._updateValueCallback = null;  
   }
 
   onSubscribe(maxValueSize, updateValueCallback) {
-    if (DEBUG) console.log('[powerService] client subscribed to PM');
+    if (this.debug) console.log('[powerService] client subscribed to PM');
     this._updateValueCallback = updateValueCallback;
     return this.RESULT_SUCCESS;
   };
 
   onUnsubscribe() {
-    if (DEBUG) console.log('[powerService] client unsubscribed from PM');
+    if (this.debug) console.log('[powerService] client unsubscribed from PM');
     this._updateValueCallback = null;
     return this.RESULT_UNLIKELY_ERROR;
   };
@@ -51,7 +51,7 @@ class CyclingPowerMeasurementCharacteristic extends  Bleno.Characteristic {
     }
   
     if (this._updateValueCallback) {
-		if (DEBUG) console.log("[powerService] Notify");
+		if (this.debug) console.log("[powerService] Notify");
 		var buffer = new Buffer(8);
 		// flags
 		// 00000001 - 1   - 0x001 - Pedal Power Balance Present
@@ -67,13 +67,13 @@ class CyclingPowerMeasurementCharacteristic extends  Bleno.Characteristic {
 	   
 		if ('power' in event) {
 		  var power = event.power;
-		  if (DEBUG) console.log("[powerService] power: " + power);
+		  if (this.debug) console.log("[powerService] power: " + power);
 		  buffer.writeInt16LE(power, 2);
 		}
 	  
 		if ('rpm' in event) {
 		  var rpm = event.rpm;
-		  if (DEBUG) console.log("[powerService] rpm: " + event.rpm);
+		  if (this.debug) console.log("[powerService] rpm: " + event.rpm);
 		  buffer.writeUInt16LE(rpm, 4);
 		}
       this._updateValueCallback(buffer);

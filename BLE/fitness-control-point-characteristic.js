@@ -1,6 +1,5 @@
 
 var Bleno = require('@abandonware/bleno');
-var DEBUG = false;
 
 // Spec
 // Control point op code
@@ -39,8 +38,8 @@ var ResultCode = {
 };
 
 class FitnessControlPoint extends Bleno.Characteristic {
-
-	constructor(callback) {
+	debug = false
+	constructor(callback,debug = false) {
 		super({
 			uuid: '2AD9',
 			value: null,
@@ -53,7 +52,7 @@ class FitnessControlPoint extends Bleno.Characteristic {
 				})
 			]
 		});
-
+		this.debug = debug
 		this.underControl = false;
 		if (!callback)
 			throw "callback can't be null";
@@ -62,21 +61,21 @@ class FitnessControlPoint extends Bleno.Characteristic {
 	
 	
 	onSubscribe(maxValueSize, updateValueCallback) {
-		if (DEBUG)
+		if (this.debug)
 			console.log('[FitnessControlPoint] onSubscribe');
 		this.serverCallback = updateValueCallback;
 		return this.RESULT_SUCCESS;
 	};
 
 	onUnsubscribe() {
-		if (DEBUG)
+		if (this.debug)
 			console.log('[FitnessControlPoint] onUnsubscribe');
 		this.serverCallback = null;
 		return this.RESULT_UNLIKELY_ERROR;
 	};
 
 	onIndicate() {
-		if (DEBUG)
+		if (this.debug)
 			console.log('[FitnessControlPoint] onIndicate');
 	};
 
@@ -87,28 +86,28 @@ class FitnessControlPoint extends Bleno.Characteristic {
 		 
 		switch (state) {
 		case ControlPointOpCode.requestControl:
-			if (DEBUG)
+			if (this.debug)
 				console.log('[FitnessControlPoint] ControlPointOpCode.requestControl.');
 			if (!this.underControl) {
 				if (this.ClientCallback('control')) {
-					if (DEBUG)
+					if (this.debug)
 						console.log('[FitnessControlPoint] control succeed.');
 					this.underControl = true;
 					this.serverCallback(this.buildResponse(state, ResultCode.success)); // ok
 				} else {
-					if (DEBUG)
+					if (this.debug)
 						console.log('[FitnessControlPoint] control aborted.');
 					this.serverCallback(this.buildResponse(state, ResultCode.operationFailed));
 				}
 			} else {
-				if (DEBUG)
+				if (this.debug)
 					console.log('[FitnessControlPoint] allready controled.');
 				this.serverCallback(this.buildResponse(state, ResultCode.success));
 			}
 			break;
 
 		case ControlPointOpCode.resetControl:
-			if (DEBUG)
+			if (this.debug)
 				console.log('[FitnessControlPoint] ControlPointOpCode.resetControl.');
 			if (this.underControl) {
 				// reset the bike
@@ -116,52 +115,52 @@ class FitnessControlPoint extends Bleno.Characteristic {
 					this.underControl = false;
 					this.serverCallback(this.buildResponse(state, ResultCode.success)); // ok
 				} else {
-					if (DEBUG)
+					if (this.debug)
 						console.log('[FitnessControlPoint] control reset controled.');
 					this.serverCallback(this.buildResponse(state, ResultCode.operationFailed));
 				}
 			} else {
-				if (DEBUG)
+				if (this.debug)
 					console.log('[FitnessControlPoint] reset without control.');
 				this.serverCallback(this.buildResponse(state, ResultCode.controlNotPermitted));
 			}
 			break;
 
 		case ControlPointOpCode.setTargetPower:
-			if (DEBUG)
+			if (this.debug)
 				console.log('[FitnessControlPoint] ControlPointOpCode.setTargetPower.');
 			if (this.underControl) {
 				var watt = data.readUInt16LE(1);
-				if (DEBUG)
+				if (this.debug)
 					console.log('[FitnessControlPoint] watt : ' + watt);
 				if (this.ClientCallback('power', watt)) {
 					this.serverCallback(this.buildResponse(state, ResultCode.success)); // ok
 				} else {
-					if (DEBUG)
+					if (this.debug)
 						console.log('[FitnessControlPoint] setTarget failed');
 					this.serverCallback(this.buildResponse(state, ResultCode.operationFailed));
 				}
 			} else {
-				if (DEBUG)
+				if (this.debug)
 					console.log('[FitnessControlPoint] setTargetPower without control.');
 				this.serverCallback(this.buildResponse(state, ResultCode.controlNotPermitted));
 			}
 			break;
 
 		case ControlPointOpCode.startOrResume:
-			if (DEBUG)
+			if (this.debug)
 				console.log('[FitnessControlPoint] ControlPointOpCode.startOrResume');
 			this.serverCallback(this.buildResponse(state, ResultCode.success));
 			break;
 
 		case ControlPointOpCode.stopOrPause:
-			if (DEBUG)
+			if (this.debug)
 				console.log('[FitnessControlPoint] ControlPointOpCode.stopOrPause');
 			this.serverCallback(this.buildResponse(state, ResultCode.success));
 			break;
 
 		case ControlPointOpCode.setIndoorBikeSimulationParameters:
-			if (DEBUG)
+			if (this.debug)
 				console.log('[FitnessControlPoint] ControlPointOpCode.setIndoorBikeSimulationParameters');
 			var windspeed = data.readInt16LE(1) * 0.001;
 			var grade = data.readInt16LE(3) * 0.01;
@@ -170,14 +169,14 @@ class FitnessControlPoint extends Bleno.Characteristic {
 			if (this.ClientCallback('simulation', windspeed, grade, crr, cw)) {
 				this.serverCallback(this.buildResponse(state, ResultCode.success));
 			} else {
-				if (DEBUG)
+				if (this.debug)
 					console.log('[FitnessControlPoint] simulation failed');
 				this.serverCallback(this.buildResponse(state, ResultCode.operationFailed));
 			}
 			break;
 
 		default: // anything else : not yet implemented
-			if (DEBUG)
+			if (this.debug)
 				console.log('[FitnessControlPoint] State is not supported ' + state + '.');
 			this.serverCallback(this.buildResponse(state, ResultCode.opCodeNotSupported));
 			break;

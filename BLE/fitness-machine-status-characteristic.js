@@ -1,5 +1,4 @@
 const Bleno = require('@abandonware/bleno');
-var DEBUG = false;
 
 // Spec
 // Status op code
@@ -24,7 +23,8 @@ var StatusOpCode = {
 }
 
 class FitnessMachineStatusCharacteristic extends Bleno.Characteristic {
-  constructor () {
+  debug = false
+  constructor (debug = false) {
     super({
       uuid: '2ADA',
       value: null,
@@ -37,23 +37,24 @@ class FitnessMachineStatusCharacteristic extends Bleno.Characteristic {
         })
       ]
     })
+    this.debug = debug
     this._updateValueCallback = null
   }
 
   onSubscribe (maxValueSize, updateValueCallback) {
-    if (DEBUG) console.log('[fitness-machine-status-characteristic.js] - client subscribed')
+    if (this.debug) console.log('[fitness-machine-status-characteristic.js] - client subscribed')
     this._updateValueCallback = updateValueCallback
     return this.RESULT_SUCCESS
   }
 
   onUnsubscribe () {
-    if (DEBUG) console.log('[fitness-machine-status-characteristic.js] - client unsubscribed')
+    if (this.debug) console.log('[fitness-machine-status-characteristic.js] - client unsubscribed')
     this._updateValueCallback = null
     return this.RESULT_UNLIKELY_ERROR
   }
 
   notify (event) {
-    if (DEBUG) console.log('[fitness-machine-status-characteristic.js] - notify')
+    if (this.debug) console.log('[fitness-machine-status-characteristic.js] - notify')
     var buffer = new Buffer.from(2)
     // speed + power + heart rate
     buffer.writeUInt8(StatusOpCode.startedResumedUser, 0)
@@ -61,7 +62,7 @@ class FitnessMachineStatusCharacteristic extends Bleno.Characteristic {
     if (this._updateValueCallback) {
       this._updateValueCallback(buffer)
     } else {
-      if (DEBUG) console.log('[fitness-machine-status-characteristic.js] - nobody is listening')
+      if (this.debug) console.log('[fitness-machine-status-characteristic.js] - nobody is listening')
     }
     return this.RESULT_SUCCESS
   }

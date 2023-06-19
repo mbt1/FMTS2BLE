@@ -4,15 +4,17 @@ const CyclingPowerService = require('./cycling-power-service');
 const FitnessMachineService = require('./ftms-service');
 
 class KettlerBLE extends EventEmitter {
+	debug = false
 
-	constructor(serverCallback) {
+	constructor(serverCallback, debug = false) {
 		super();
 
+		this.debug = debug
 		this.name = "KettlerBLE";
 		process.env['BLENO_DEVICE_NAME'] = this.name; 
 
-		this.csp = new CyclingPowerService();
-		this.ftms = new FitnessMachineService(serverCallback); 
+		this.csp = new CyclingPowerService(this.debug);
+		this.ftms = new FitnessMachineService(serverCallback,this.debug); 
 
 		let self = this;
 		console.log(`[${this.name} starting]`);
@@ -74,6 +76,7 @@ class KettlerBLE extends EventEmitter {
 
 	// notifiy BLE services
 	notifyFTMS(event) {
+		if(this.debug)console.log(`[${this.name} event]`+JSON.stringify(event));
 		this.csp.notify(event);
 		this.ftms.notify(event);
 	};

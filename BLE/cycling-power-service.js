@@ -6,8 +6,9 @@ const StaticReadCharacteristic = require('./static-read-characteristic');
 // https://developer.bluetooth.org/gatt/services/Pages/ServiceViewer.aspx?u=org.bluetooth.service.cycling_power.xml
 class CyclingPowerService extends Bleno.PrimaryService {
 
-  constructor() {
-    let powerMeasurement = new CyclingPowerMeasurementCharacteristic();
+  debug = false
+  constructor(debug = false) {
+    let powerMeasurement = new CyclingPowerMeasurementCharacteristic(debug);
     super({
         // uuid: '1818',
 		uuid: '1515',
@@ -17,11 +18,12 @@ class CyclingPowerService extends Bleno.PrimaryService {
           new StaticReadCharacteristic('2A5D', 'Sensor Location', [13])         // 13 = rear hub
         ]
     });
-
+    this.debug = debug
     this.powerMeasurement = powerMeasurement;
   }
 
   notify(event) {
+		if(this.debug)console.log(`[${this.name} event]`+JSON.stringify(event));
     this.powerMeasurement.notify(event);
     return this.RESULT_SUCCESS;
   };

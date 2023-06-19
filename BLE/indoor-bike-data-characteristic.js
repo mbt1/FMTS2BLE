@@ -1,9 +1,9 @@
 var Bleno = require('@abandonware/bleno');
-var DEBUG = false;
+
 
 class IndoorBikeDataCharacteristic extends Bleno.Characteristic {
-
-	constructor() {
+	debug = false
+	constructor(debug = false) {
 		super({
 			uuid: '2AD2',
 			value: null,
@@ -16,17 +16,18 @@ class IndoorBikeDataCharacteristic extends Bleno.Characteristic {
 				})
 			]
 		});
+		this.debug = debug
 		this._updateValueCallback = null;
 	}
 
 	onSubscribe(maxValueSize, updateValueCallback) {
-		if (DEBUG) console.log('[IndoorBikeDataCharacteristic] client subscribed');
+		if (this.debug) console.log('[IndoorBikeDataCharacteristic] client subscribed');
 		this._updateValueCallback = updateValueCallback;
 		return this.RESULT_SUCCESS;
 	};
 
 	onUnsubscribe() {
-		if (DEBUG) console.log('[IndoorBikeDataCharacteristic] client unsubscribed');
+		if (this.debug) console.log('[IndoorBikeDataCharacteristic] client unsubscribed');
 		this._updateValueCallback = null;
 		return this.RESULT_UNLIKELY_ERROR;
 	};
@@ -38,7 +39,7 @@ class IndoorBikeDataCharacteristic extends Bleno.Characteristic {
 		}
 
 		if (this._updateValueCallback) {
-			if (DEBUG) console.log("[IndoorBikeDataCharacteristic] Notify");
+			if (this.debug) console.log("[IndoorBikeDataCharacteristic] Notify");
 			var buffer = new Buffer(10);
 			// speed + power + heart rate
 			buffer.writeUInt8(0x44, 0);
@@ -47,28 +48,28 @@ class IndoorBikeDataCharacteristic extends Bleno.Characteristic {
 			var index = 2;
 			if ('speed' in event) {
 				var speed = parseInt(event.speed * 100);
-				if (DEBUG) console.log("[IndoorBikeDataCharacteristic] speed: " + speed);
+				if (this.debug) console.log("[IndoorBikeDataCharacteristic] speed: " + speed);
 				buffer.writeInt16LE(speed, index);
 				index += 2;
 			}
 			
 			if ('rpm' in event) {
 				var rpm = event.rpm;
-				if (DEBUG) console.log("[IndoorBikeDataCharacteristic] rpm: " + rpm);
+				if (this.debug) console.log("[IndoorBikeDataCharacteristic] rpm: " + rpm);
 				buffer.writeInt16LE(rpm * 2, index);
 				index += 2;
 			}
 			
 			if ('power' in event) {
 				var power = event.power;
-				if (DEBUG) console.log("[IndoorBikeDataCharacteristic] power: " + power);
+				if (this.debug) console.log("[IndoorBikeDataCharacteristic] power: " + power);
 				buffer.writeInt16LE(power, index);
 				index += 2;
 			}
 
 			if ('hr' in event) {
 				var hr = event.hr;
-				if (DEBUG) console.log("[IndoorBikeDataCharacteristic] hr : " + hr);
+				if (this.debug) console.log("[IndoorBikeDataCharacteristic] hr : " + hr);
 				buffer.writeUInt16LE(hr, index);
 				index += 2;
 			}
@@ -76,7 +77,7 @@ class IndoorBikeDataCharacteristic extends Bleno.Characteristic {
 		}
 		else
 		{
-			if (DEBUG) console.log("[IndoorBikeDataCharacteristic] nobody is listening");
+			if (this.debug) console.log("[IndoorBikeDataCharacteristic] nobody is listening");
 		}
 		return this.RESULT_SUCCESS;
 	}
