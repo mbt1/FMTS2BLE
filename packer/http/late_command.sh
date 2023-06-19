@@ -32,6 +32,7 @@ fi
 apt install bluez -y
 systemctl --no-pager status bluetooth
 
+apt install -y build-essential 
 apt install -y curl
 # LTS_VERSION=$(curl --silent https://nodejs.org/en/about/releases/ | grep LTS | head -1 | cut -d " " -f2)
 # curl -sL "https://deb.nodesource.com/setup_${LTS_VERSION}.x" | sudo -E bash -
