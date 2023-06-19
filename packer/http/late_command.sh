@@ -11,10 +11,9 @@ apt upgrade -y
 
 apt install sudo
 dpkg -l sudo
+usermod -aG sudo debian
 
 apt install git -y
-git config --global user.name "mbt1"
-git config --global user.email "mbt1@users.noreply.github.com"
 git --version
 
 # Create the destination directory if it doesn't exist
@@ -37,17 +36,5 @@ apt install -y curl
 # LTS_VERSION=$(curl --silent https://nodejs.org/en/about/releases/ | grep LTS | head -1 | cut -d " " -f2)
 # curl -sL "https://deb.nodesource.com/setup_${LTS_VERSION}.x" | sudo -E bash -
 # apt install -y nodejs
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-command -v nvm
-nvm --version
-nvm install --lts
-node -v
-npm -v
-npm install -g npm
-npm install -g express
 
-NODE_VERSION=$(node -v)
-ln -s /root/.nvm/versions/node/$NODE_VERSION/bin/node /usr/local/bin/node
-ln -s /root/.nvm/versions/node/$NODE_VERSION/bin/npm /usr/local/bin/npm
+sudo -u debian sh ${0%/*}/late_nonroot.sh
