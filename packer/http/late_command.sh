@@ -1,3 +1,11 @@
+# mkdir /mnt/cdrom2;mount /dev/sr1 /mnt/cdrom2
+# sh /mnt/cdrom2/late_command.sh
+
+REPO_URL="https://github.com/example/repository.git"
+DEST_DIR="$HOME/dev/USB2FTMSBLE"
+
+
+
 apt update -y
 apt upgrade -y
 
@@ -9,6 +17,18 @@ git config --global user.name "mbt1"
 git config --global user.email "mbt1@users.noreply.github.com"
 git --version
 
+# Create the destination directory if it doesn't exist
+mkdir -p "$DEST_DIR"
+
+# Check if the repository is already cloned
+if [ -d "$DEST_DIR/.git" ]; then
+  echo "Repository already cloned."
+else
+  # Clone the repository
+  git clone "$REPO_URL" "$DEST_DIR"
+  echo "Repository cloned successfully."
+fi
+
 apt install bluez -y
 systemctl --no-pager status bluetooth
 
@@ -17,3 +37,4 @@ LTS_VERSION=$(curl --silent https://nodejs.org/en/about/releases/ | grep LTS | h
 curl -sL "https://deb.nodesource.com/setup_${LTS_VERSION}.x" | sudo -E bash -
 apt install -y nodejs
 node -v
+
