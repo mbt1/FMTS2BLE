@@ -2,7 +2,7 @@
 # sh /mnt/cdrom2/late_command.sh
 
 REPO_URL="https://github.com/mbt1/USB2FTMSBLE.git"
-DEST_DIR="$HOME/dev/USB2FTMSBLE"
+DEST_DIR="/home/debian/dev/USB2FTMSBLE"
 BRANCH="main"
 
 
@@ -18,14 +18,14 @@ git config --global user.email "mbt1@users.noreply.github.com"
 git --version
 
 # Create the destination directory if it doesn't exist
-mkdir -p "$DEST_DIR"
+sudo -u debian mkdir -p "$DEST_DIR"
 
 # Check if the repository is already cloned
 if [ -d "$DEST_DIR/.git" ]; then
   echo "Repository already cloned."
 else
   # Clone the repository
-  git clone --branch "$BRANCH" "$REPO_URL" "$DEST_DIR"
+  sudo -u debian git clone --branch "$BRANCH" "$REPO_URL" "$DEST_DIR"
   echo "Repository cloned successfully."
 fi
 
