@@ -23,7 +23,7 @@ source "vmware-iso" "debian" {
   vm_name     = "packer-debian"
   cpus        = 1
   memory      = 1024
-  disk_size   = 4096
+  disk_size   = 8192
   format      = "ovf"
   http_directory = "http"
   cd_files = ["./http/*"]
