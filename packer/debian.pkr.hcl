@@ -39,6 +39,8 @@ source "vmware-iso" "debian" {
     "<wait><enter><wait>",
     "mkdir /mnt/cdrom2<enter><wait>",
     "mount /dev/sr1 /mnt/cdrom2<enter><wait>",
+    "mkdir ~/preseed<enter><wait>",
+    "cp /mnt/cdrom2/* ~/preseed/<enter><wait>",
     "<leftAltOn><f1><leftAltOff><wait>",    "<enter><wait>"
   ]
   headless = true
