@@ -1,9 +1,9 @@
 # mkdir /mnt/cdrom2;mount /dev/sr1 /mnt/cdrom2
 # sh /mnt/cdrom2/late_command.sh
 
-REPO_URL="https://github.com/example/repository.git"
+REPO_URL="https://github.com/mbt1/USB2FTMSBLE.git"
 DEST_DIR="$HOME/dev/USB2FTMSBLE"
-
+BRANCH="main"
 
 
 apt update -y
@@ -25,7 +25,7 @@ if [ -d "$DEST_DIR/.git" ]; then
   echo "Repository already cloned."
 else
   # Clone the repository
-  git clone "$REPO_URL" "$DEST_DIR"
+  git clone --branch "$BRANCH" "$REPO_URL" "$DEST_DIR"
   echo "Repository cloned successfully."
 fi
 
