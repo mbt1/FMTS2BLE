@@ -44,6 +44,11 @@ source "vmware-iso" "debian" {
     "<leftAltOn><f1><leftAltOff><wait>",    "<enter><wait>"
   ]
   headless = true
+  vmx_data = {
+    "usb.present" = "TRUE"
+    "usb.vbluetooth.startConnected" = "TRUE"
+    "ehci.present" = "TRUE"
+  }
 }
 
 build {
