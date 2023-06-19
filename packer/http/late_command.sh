@@ -44,5 +44,5 @@ nvm --version
 nvm install --lts
 node -v
 npm -v
-
+npm install -g npm
 npm install -g express
