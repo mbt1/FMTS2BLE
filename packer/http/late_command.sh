@@ -1,5 +1,4 @@
-# mkdir /mnt/cdrom2;mount /dev/sr1 /mnt/cdrom2
-# sh /mnt/cdrom2/late_command.sh
+# mkdir /mnt/cdrom2;mount /dev/sr1 /mnt/cdrom2;sh /mnt/cdrom2/late_command.sh
 
 REPO_URL="https://github.com/mbt1/USB2FTMSBLE.git"
 DEST_DIR="/home/debian/dev/USB2FTMSBLE"
