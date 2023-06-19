@@ -14,8 +14,6 @@ dpkg -l sudo
 usermod -aG sudo debian
 
 apt install git -y
-git config --global user.name "mbt1"
-git config --global user.email "mbt1@users.noreply.github.com"
 git --version
 
 # Create the destination directory if it doesn't exist
