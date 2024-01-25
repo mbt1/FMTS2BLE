@@ -1,5 +1,8 @@
+import asyncio
 import logging
+import struct
 import threading
+import time
 from typing import Any, Dict
 from bless import (  # type: ignore
         BlessServer,
@@ -12,16 +15,36 @@ from bless import (  # type: ignore
 class FTMSBLEServer:
     my_service_name = "FTMSBLE Test Service"
     gatt: Dict = {
-            "A07498CA-AD5B-474E-940D-16F1FBE7E8CD": {
-                "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021B": {
-                    "Properties": (GATTCharacteristicProperties.read |
-                                   GATTCharacteristicProperties.write |
-                                #    GATTCharacteristicProperties.notify |
-                                   GATTCharacteristicProperties.indicate),
-                    "Permissions": (GATTAttributePermissions.readable |
-                                    GATTAttributePermissions.writeable),
-                    "Value": None
-                }
+            "00001800-0000-1000-8000-00805f9b34fb": { # GenericAccessUUID
+                "00002a00-0000-1000-8000-00805f9b34fb": { # DeviceNameUUID
+                    "Properties": (
+                                    GATTCharacteristicProperties.read
+                                ),
+                    "Permissions": (GATTAttributePermissions.readable),
+                    "Value": b'FFTMSBLEServerKER',
+                    "value": b'FFTMSBLEServerKER',
+                    "Description": "Device Name"
+                },
+                "00002a01-0000-1000-8000-00805f9b34fb": { # AppearanceNameUUID
+                    "Properties": (
+                                    GATTCharacteristicProperties.read
+                                ),
+                    "Permissions": (GATTAttributePermissions.readable),
+                    "Value":        b'\x80\x00',
+                    "value":        b'\x80\x00',
+                    "Description": "Appearance"
+                },
+            },
+            "0000180d-0000-1000-8000-00805f9b34fb": { # HeartRateUUID
+                "00002a37-0000-1000-8000-00805f9b34fb": { # HeartRateMeasurementUUID
+                    "Properties": (
+                                    GATTCharacteristicProperties.read |
+                                    GATTCharacteristicProperties.notify 
+                                ),
+                    "Permissions": (GATTAttributePermissions.readable),
+                    "Value": None,
+                    "Description": "Heart Rate Measurement"
+                },
             }
         }
     def __init__(self):
@@ -35,10 +58,19 @@ class FTMSBLEServer:
         self.server = BlessServer(name=self.my_service_name, loop=loop)
         self.server.read_request_func = self.read_request
         self.server.write_request_func = self.write_request
+        
+        
         await self.server.add_gatt(self.gatt)
-        await self.server.start()
+        await self.server.start(prioritize_local_name = False)
         self.logger.debug("Advertising")
-        self.exit_trigger.wait()
+        while not(self.exit_trigger.isSet()):
+            await asyncio.sleep(1)
+            hrt = int(time.time() % 60) + 100
+            flags = 0
+            info = struct.pack ('<BB', flags, hrt)
+            self.server.get_characteristic("00002a37-0000-1000-8000-00805f9b34fb").value = info
+            self.server.update_value("0000180d-0000-1000-8000-00805f9b34fb","00002a37-0000-1000-8000-00805f9b34fb")
+        
 
     def stop_server(self):
         self.exit_trigger.set()
