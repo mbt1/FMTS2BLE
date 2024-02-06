@@ -17,7 +17,8 @@ class FTMSBLEServer:
     currentCadence = 0
     currentPower = 0
 
-    my_service_name = "FTMSBLE Test Service"
+    my_device_name = b"FTMSBLES02"
+    my_service_name = "FTMSBLES02 Service"
     fitness_machine_S_UUID = "00001826-0000-1000-8000-00805f9b34fb"
     heart_rate_measurement_C_UUID = "00002a37-0000-1000-8000-00805f9b34fb"
     fitness_machine_control_point_C_UUID = "00002ad9-0000-1000-8000-00805f9b34fb"
@@ -63,8 +64,8 @@ class FTMSBLEServer:
                                     GATTCharacteristicProperties.read
                                 ),
                     "Permissions": (GATTAttributePermissions.readable),
-                    "Value": b'FFTMSBLEServerKER',
-                    "value": b'FFTMSBLEServerKER',
+                    "Value": (my_device_name),
+                    "value": (my_device_name),
                     "Description": "Device Name"
                 },
                 appearance_C_UUID:{
@@ -87,10 +88,12 @@ class FTMSBLEServer:
                 # },
                 fitness_machine_control_point_C_UUID: {
                     "Properties": (
-                                    GATTCharacteristicProperties.read
+                                    GATTCharacteristicProperties.write |
+                                    GATTCharacteristicProperties.indicate
                                 ),
-                    "Permissions": (GATTAttributePermissions.readable),
-                    "Value": None,
+                    "Permissions": (GATTAttributePermissions.readable | GATTAttributePermissions.writeable),
+                    "Value": b"\x00\x00",
+                    "value": b"\x00\x00",
                     "Description": "Heart Rate Measurement"
                 },
                 fitness_machine_feature_C_UUID: {
@@ -173,6 +176,14 @@ class FTMSBLEServer:
         self.server.get_characteristic(self.heart_rate_measurement_C_UUID).value = info
         self.server.update_value(self.fitness_machine_S_UUID,self.heart_rate_measurement_C_UUID)
 
+    def set_target_watt(self,watt):
+        self.logger.debug(f"Setting Target Watt: {watt}")
+
+        flags = 0
+        info = struct.pack ('<BB', flags, watt)
+        self.server.get_characteristic(self.fitness_machine_control_point_C_UUID).value = info
+        self.server.update_value(self.fitness_machine_S_UUID,self.fitness_machine_control_point_C_UUID)
+
     def stop_server(self):
         self.exit_trigger.set()
 
@@ -183,11 +194,16 @@ class FTMSBLEServer:
             ) -> bytearray:
         self.logger.debug(f"Reading {self.characteristic_names[characteristic._uuid]}: {characteristic.value}")
         return characteristic.value
+    
     def write_request(
                 self,
                 characteristic: BlessGATTCharacteristic,
                 value: Any,
                 **kwargs
             ):
-        characteristic.value = value
-        self.logger.debug(f"Char value set to {characteristic.value}")
+        uuid = str(characteristic._uuid)
+        self.logger.debug(f"Setting value for {self.characteristic_names[uuid]} to {characteristic.value}")
+        if uuid == self.fitness_machine_control_point_C_UUID:
+            self.set_target_watt(value)
+            pass
+
