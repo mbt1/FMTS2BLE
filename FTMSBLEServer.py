@@ -16,6 +16,7 @@ class FTMSBLEServer:
     currentSpeed = 0
     currentCadence = 0
     currentPower = 0
+    targetPower = 100
 
     my_device_name = b"FTMSBLES02"
     my_service_name = "FTMSBLES02 Service"
@@ -55,7 +56,20 @@ class FTMSBLEServer:
     ibd_InstantaneousPowerPresent       = 1 << 6
     ibd_HeartRatePresent                = 0 # 1 << 9
     ibd_Flags                           = ibd_InstantaneousSpeedIsNotPresent | ibd_InstantaneousCadencePresent | ibd_InstantaneousPowerPresent | ibd_HeartRatePresent
+    fms_TargetPowerChanged = 1 << 3
+    fmcp_RequestControl = 0x00
+    fmcp_Reset = 0x01
+    fmcp_SetTargetPower = 0x05
+    fmcp_StartOrResume = 0x07
+    fmcp_StopOrPause = 0x08
+    fmcp_SetIndoorBikeSimulation = 0x11
+    fmcp_ResponseCode = 0x80
 
+    fmcp_Success = 0x01
+    fmcp_OpCodeNotSupported = 0x02
+    fmcp_InvalidParameter = 0x03
+    fmcp_OperationFailed = 0x04
+    fmcp_ControlNotPermitted = 0x05
 
     gatt: Dict = {
             fitness_machine_S_UUID: { 
@@ -151,7 +165,7 @@ class FTMSBLEServer:
         while not(self.exit_trigger.isSet()):
             await asyncio.sleep(1)
             # self.set_heart_rate(int(time.time() % 60) + 100)
-            self.set_bike_data(int(time.time() % 60),int(time.time() % 30) + 65, int(time.time() % 60) + 200)
+            self.set_bike_data(abs(int(time.time() % 40)-20)+10,abs(int(time.time() % 20)-10) + 65, abs(int(time.time() % 10)-5) + self.targetPower)
         
     def set_bike_data(self,currentSpeed,currentCadence,currentPower):
         self.currentSpeed = currentSpeed
@@ -180,7 +194,7 @@ class FTMSBLEServer:
         self.logger.debug(f"Setting Target Watt: {watt}")
 
         flags = 0
-        info = struct.pack ('<BB', flags, watt)
+        info = struct.pack ('<BH', self.fms_TargetPowerChanged, watt)
         self.server.get_characteristic(self.fitness_machine_control_point_C_UUID).value = info
         self.server.update_value(self.fitness_machine_S_UUID,self.fitness_machine_control_point_C_UUID)
 
@@ -202,8 +216,9 @@ class FTMSBLEServer:
                 **kwargs
             ):
         uuid = str(characteristic._uuid)
-        self.logger.debug(f"Setting value for {self.characteristic_names[uuid]} to {characteristic.value}")
         if uuid == self.fitness_machine_control_point_C_UUID:
+            self.logger.debug(f"Setting value for {self.characteristic_names[uuid]} to {characteristic.value}")
             self.set_target_watt(value)
-            pass
+        else:
+            self.logger.debug(f"NOT SUPPORTED: Setting value for {self.characteristic_names[uuid]} to {characteristic.value}")
 
