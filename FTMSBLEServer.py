@@ -17,6 +17,8 @@ class FTMSBLEServer:
     currentCadence = 0
     currentPower = 0
     targetPower = 100
+    isUnderControl = False
+    isTrainingRunning = False
 
     my_device_name = b"FTMSBLES02"
     my_service_name = "FTMSBLES02 Service"
@@ -71,6 +73,12 @@ class FTMSBLEServer:
     fmcp_OperationFailed = 0x04
     fmcp_ControlNotPermitted = 0x05
 
+    fms_Reset = 0x01
+    fms_FitnessMachineStoppedOrPausedByUser = 0x02
+    fms_FitnessMachineStartedOrResumedByUser = 0x04
+    fms_TargetPowerChanged = 0x08
+    fms_IndoorBikeSimulationParametersChanged = 0x12
+
     gatt: Dict = {
             fitness_machine_S_UUID: { 
                 device_name_C_UUID: {
@@ -106,8 +114,6 @@ class FTMSBLEServer:
                                     GATTCharacteristicProperties.indicate
                                 ),
                     "Permissions": (GATTAttributePermissions.readable | GATTAttributePermissions.writeable),
-                    "Value": b"\x00\x00",
-                    "value": b"\x00\x00",
                     "Description": "Heart Rate Measurement"
                 },
                 fitness_machine_feature_C_UUID: {
@@ -126,15 +132,15 @@ class FTMSBLEServer:
                     "Value": b'\x32\x00\x58\x02\x05\x00', # 50w - 600w, 5w increments
                     "Description": "Heart Rate Measurement"
                 },
-                # fitness_machine_status_C_UUID: {
-                #     "Properties": (
-                #                     GATTCharacteristicProperties.read |
-                #                     GATTCharacteristicProperties.notify 
-                #                 ),
-                #     "Permissions": (GATTAttributePermissions.readable),
-                #     "Value": None,
-                #     "Description": "Heart Rate Measurement"
-                # },
+                fitness_machine_status_C_UUID: {
+                    "Properties": (
+                                    GATTCharacteristicProperties.read |
+                                    GATTCharacteristicProperties.notify 
+                                ),
+                    "Permissions": (GATTAttributePermissions.readable),
+                    "Value": None,
+                    "Description": "Heart Rate Measurement"
+                },
                 indoor_bike_data_C_UUID: {
                     "Properties": (
                                     GATTCharacteristicProperties.read |
@@ -150,6 +156,7 @@ class FTMSBLEServer:
         logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger(name=self.__class__.__name__)
         self.exit_trigger: threading.Event = threading.Event()
+        self.isUnderControl = False
 
 
     async def run(self,loop):
@@ -190,13 +197,69 @@ class FTMSBLEServer:
         self.server.get_characteristic(self.heart_rate_measurement_C_UUID).value = info
         self.server.update_value(self.fitness_machine_S_UUID,self.heart_rate_measurement_C_UUID)
 
-    def set_target_watt(self,watt):
-        self.logger.debug(f"Setting Target Watt: {watt}")
+    
+    def reset_control(self):
+        self.isUnderControl = False
+        self.isTrainingRunning = False
 
-        flags = 0
-        info = struct.pack ('<BH', self.fms_TargetPowerChanged, watt)
-        self.server.get_characteristic(self.fitness_machine_control_point_C_UUID).value = info
-        self.server.update_value(self.fitness_machine_S_UUID,self.fitness_machine_control_point_C_UUID)
+    def handle_control_request(self, value):
+        opcode = value[0]
+        setValue = value[1:]
+        result = self.fmcp_Success
+        if opcode == self.fmcp_RequestControl:
+            if not self.isUnderControl:
+                self.isUnderControl = True
+                self.isTrainingRunning = False
+                self.logger.debug(f"-->Control Request Accepted")
+            else:
+                result = self.fmcp_ControlNotPermitted
+                self.logger.debug(f"--!Control Request Denied")
+        elif not self.isUnderControl:
+            result = self.fmcp_ControlNotPermitted
+            self.logger.debug(f"--!Action Request Denied because no control")
+        else:
+            if opcode == self.fmcp_StartOrResume:
+                self.fms_action_StartOrResume()
+            elif opcode == self.fmcp_StopOrPause:
+                self.fms_action_StopOrPause()
+            elif opcode == self.fmcp_Reset:
+                self.fms_action_Reset()
+            elif opcode == self.fmcp_SetTargetPower:
+                self.fms_action_SetTargetPower(setValue)
+            else:
+                self.logger.debug(f"--!Unknown Opcode: {opcode}")
+                result = self.fmcp_ControlNotPermitted
+        
+        info = struct.pack("<BBB",self.fmcp_ResponseCode,opcode,result)
+        self.update_characteristic(self.fitness_machine_control_point_C_UUID,info)
+
+    def fms_action_SetTargetPower(self,value):
+        self.targetPower = struct.unpack("H",value)
+        self.logger.debug(f"-->Training Target Power set to {self.targetPower}")
+        info = struct.pack("<BH",self.fms_TargetPowerChanged,value)
+        self.update_characteristic(self.fitness_machine_status_C_UUID,info)
+
+    def fms_action_StartOrResume(self):
+        self.isTrainingRunning = True
+        self.logger.debug(f"-->Training Started")
+        info = struct.pack("<B",self.fms_FitnessMachineStartedOrResumedByUser)
+        self.update_characteristic(self.fitness_machine_status_C_UUID,info)
+
+    def fms_action_StopOrPause(self):
+        self.isTrainingRunning = False
+        self.logger.debug(f"-->Training Stopped")
+        info = struct.pack("<B",self.fms_FitnessMachineStoppedOrPausedByUser)
+        self.update_characteristic(self.fitness_machine_status_C_UUID,info)
+
+    def fms_action_Reset(self):
+        self.reset_control()
+        self.logger.debug(f"-->Training Reset, Control Ended")
+        info = struct.pack("<B",self.fms_Reset)
+        self.update_characteristic(self.fitness_machine_status_C_UUID,info)
+
+    def update_characteristic(self,characteristic_uuid,info):
+        self.server.get_characteristic(characteristic_uuid).value = info
+        self.server.update_value(self.fitness_machine_S_UUID,characteristic_uuid)
 
     def stop_server(self):
         self.exit_trigger.set()
@@ -217,8 +280,8 @@ class FTMSBLEServer:
             ):
         uuid = str(characteristic._uuid)
         if uuid == self.fitness_machine_control_point_C_UUID:
-            self.logger.debug(f"Setting value for {self.characteristic_names[uuid]} to {characteristic.value}")
-            self.set_target_watt(value)
+            self.logger.debug(f"Writing to {self.characteristic_names[uuid]}: {value}")
+            self.handle_control_request(value)
         else:
             self.logger.debug(f"NOT SUPPORTED: Setting value for {self.characteristic_names[uuid]} to {characteristic.value}")
 
