@@ -170,7 +170,7 @@ class FTMSBLEServer:
         await self.server.start(prioritize_local_name = False)
         self.logger.debug("Advertising")
         while not(self.exit_trigger.isSet()):
-            await asyncio.sleep(1)
+            await asyncio.sleep(2)
             # self.set_heart_rate(int(time.time() % 60) + 100)
             self.set_bike_data(abs(int(time.time() % 40)-20)+10,abs(int(time.time() % 20)-10) + 65, abs(int(time.time() % 10)-5) + self.targetPower)
         
@@ -179,7 +179,7 @@ class FTMSBLEServer:
         self.currentCadence = currentCadence
         self.currentPower = currentPower
 
-        self.logger.debug(f"Setting Bike Data: s:{currentSpeed}, c:{currentCadence}, p:{currentPower}")
+        self.logger.debug(f"Setting Bike Data: s:{currentSpeed}, c:{currentCadence}, p:{currentPower} --- Status: Under Control:{self.isUnderControl}, In Training:{self.isTrainingRunning}, Target Power:{self.targetPower}")
 
         s     = int(self.currentSpeed * 100) & 0xffff
         c     = int(self.currentCadence * 2) & 0xffff
@@ -204,7 +204,6 @@ class FTMSBLEServer:
 
     def handle_control_request(self, value):
         opcode = value[0]
-        setValue = value[1:]
         result = self.fmcp_Success
         if opcode == self.fmcp_RequestControl:
             if not self.isUnderControl:
@@ -225,18 +224,23 @@ class FTMSBLEServer:
             elif opcode == self.fmcp_Reset:
                 self.fms_action_Reset()
             elif opcode == self.fmcp_SetTargetPower:
-                self.fms_action_SetTargetPower(setValue)
+                self.fms_action_SetTargetPower(value)
             else:
                 self.logger.debug(f"--!Unknown Opcode: {opcode}")
                 result = self.fmcp_ControlNotPermitted
         
         info = struct.pack("<BBB",self.fmcp_ResponseCode,opcode,result)
+        self.logger.debug(f'Characteristic {self.characteristic_names[self.fitness_machine_control_point_C_UUID]}: writing {info}')
         self.update_characteristic(self.fitness_machine_control_point_C_UUID,info)
+        self.logger.debug(f'Characteristic {self.characteristic_names[self.fitness_machine_control_point_C_UUID]}: writen')
 
     def fms_action_SetTargetPower(self,value):
-        self.targetPower = struct.unpack("H",value)
+        unpacked_value = struct.unpack("<BH",value)
+        self.logger.debug(f'unpacked_value = {unpacked_value}')
+        self.targetPower = unpacked_value[1]
         self.logger.debug(f"-->Training Target Power set to {self.targetPower}")
-        info = struct.pack("<BH",self.fms_TargetPowerChanged,value)
+        info = struct.pack("<BH",self.fms_TargetPowerChanged,self.targetPower)
+        self.logger.debug(f'Setting Fitness Machine Status to {info}')
         self.update_characteristic(self.fitness_machine_status_C_UUID,info)
 
     def fms_action_StartOrResume(self):
@@ -258,8 +262,11 @@ class FTMSBLEServer:
         self.update_characteristic(self.fitness_machine_status_C_UUID,info)
 
     def update_characteristic(self,characteristic_uuid,info):
+        self.logger.debug(f'Writing characteristic {self.characteristic_names[characteristic_uuid]} with value {info}...')
         self.server.get_characteristic(characteristic_uuid).value = info
+        self.logger.debug(f'Characteristic {self.characteristic_names[characteristic_uuid]} written. Notifying...')
         self.server.update_value(self.fitness_machine_S_UUID,characteristic_uuid)
+        self.logger.debug(f'Characteristic {self.characteristic_names[characteristic_uuid]}: notification sent')
 
     def stop_server(self):
         self.exit_trigger.set()
