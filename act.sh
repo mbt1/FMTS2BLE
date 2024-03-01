@@ -11,6 +11,8 @@ if [ -d ".venv" ]; then
     if [ -f "requirements.txt" ]; then
         # Install dependencies from requirements.txt
         pip install -r requirements.txt
+        pip install dbus_next
+
     else
         echo "requirements.txt not found"
     fi
