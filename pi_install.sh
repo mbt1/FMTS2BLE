@@ -24,10 +24,6 @@ else
     echo "pip for Python 3 is already installed."
 fi
 
-# Upgrade pip to the latest version
-echo "Upgrading pip..."
-pip3 install --upgrade pip
-
 # Check if the .venv directory exists
 if [ ! -d ".venv" ]; then
     echo "Creating virtual environment..."
@@ -40,6 +36,10 @@ fi
 echo "Activating the virtual environment..."
 source .venv/bin/activate
 
+# Upgrade pip to the latest version
+echo "Upgrading pip..."
+pip install --upgrade pip --break-system-packages
+
 echo "Virtual environment activated. You are now using Python and pip from within the virtual environment."
 
 # Reminder to deactivate when done
@@ -47,5 +47,5 @@ echo "Remember to run 'deactivate' when you are done using the virtual environme
 
 echo $VIRTUAL_ENV
 
-pip install -r requirements.txt
-pip install dbus_next
+pip install -r requirements.txt  --break-system-packages
+pip install dbus_next  --break-system-packages

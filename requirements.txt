@@ -1,5 +1,5 @@
 pyserial==3.5
+dbus_next==0.2.3
 bleak==0.21.1
 bless==0.2.5
-PyBluez==0.23
 pyobjc==9.2; platform_system=="Darwin"
